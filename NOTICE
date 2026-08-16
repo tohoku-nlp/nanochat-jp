@@ -1,0 +1,16 @@
+nanochat-jp
+Copyright 2026 The nanochat-jp authors
+
+This product includes software derived from nanochat,
+Copyright (c) 2025 Andrej Karpathy, licensed under the MIT License.
+
+This product includes software adapted from OpenAI HumanEval,
+Copyright (c) OpenAI (https://openai.com), licensed under the MIT License.
+
+This product includes software adapted from modded-nanogpt,
+Copyright (c) 2024 Keller Jordan, licensed under the MIT License.
+
+This product includes software from pfgen-bench,
+Copyright 2024 Preferred Networks, Inc., licensed under the Apache License 2.0.
+
+See THIRD_PARTY_NOTICES.md and LICENSES/ for source locations and license texts.

@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.pyc
+dev-ignore/
+report.md
+eval_bundle/
+
+# Editor scratch files (Emacs auto-save / backup)
+\#*\#
+.\#*
+*~
+
+# Secrets
+.env
+
+# Local setup
+CLAUDE.md
+wandb/

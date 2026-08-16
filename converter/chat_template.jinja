@@ -1,0 +1,75 @@
+{%- if messages | length == 0 %}
+    {{- raise_exception('Conversation must contain at least one message') }}
+{%- endif %}
+
+{%- set conversation_messages = messages %}
+{%- set system_prefix = '' %}
+{%- if messages[0]['role'] == 'system' %}
+    {%- if messages | length < 2 or messages[1]['role'] != 'user' %}
+        {{- raise_exception('System message must be followed by a user message') }}
+    {%- endif %}
+    {%- set system_prefix = messages[0]['content'] + '\n\n' %}
+    {%- set conversation_messages = messages[1:] %}
+{%- endif %}
+
+{{- bos_token }}
+{%- for message in conversation_messages %}
+    {%- set expected_role = 'user' if loop.index0 % 2 == 0 else 'assistant' %}
+    {%- if message['role'] != expected_role %}
+        {{- raise_exception('Messages must alternate between user and assistant roles, starting with user') }}
+    {%- endif %}
+
+    {%- if message['role'] == 'user' %}
+        {%- if message['content'] is not string %}
+            {{- raise_exception('User message content must be a string') }}
+        {%- endif %}
+        {{- '<|user_start|>' }}
+        {%- if loop.first %}
+            {{- system_prefix }}
+        {%- endif %}
+        {{- message['content'] }}
+        {{- '<|user_end|>' }}
+    {%- else %}
+        {{- '<|assistant_start|>' }}
+        {%- if message['content'] is string %}
+            {%- generation %}
+                {{- message['content'] }}
+            {%- endgeneration %}
+        {%- elif message['content'] is sequence and message['content'] is not mapping %}
+            {%- for part in message['content'] %}
+                {%- if part is not mapping or 'type' not in part or 'text' not in part %}
+                    {{- raise_exception('Assistant content parts must contain type and text fields') }}
+                {%- endif %}
+                {%- if part['text'] is not string %}
+                    {{- raise_exception('Assistant content part text must be a string') }}
+                {%- endif %}
+                {%- if part['type'] == 'text' %}
+                    {%- generation %}
+                        {{- part['text'] }}
+                    {%- endgeneration %}
+                {%- elif part['type'] == 'python' %}
+                    {%- generation %}
+                        {{- '<|python_start|>' }}
+                        {{- part['text'] }}
+                        {{- '<|python_end|>' }}
+                    {%- endgeneration %}
+                {%- elif part['type'] == 'python_output' %}
+                    {{- '<|output_start|>' }}
+                    {{- part['text'] }}
+                    {{- '<|output_end|>' }}
+                {%- else %}
+                    {{- raise_exception('Unknown assistant content part type: ' + part['type']) }}
+                {%- endif %}
+            {%- endfor %}
+        {%- else %}
+            {{- raise_exception('Assistant message content must be a string or a list of parts') }}
+        {%- endif %}
+        {%- generation %}
+            {{- '<|assistant_end|>' }}
+        {%- endgeneration %}
+    {%- endif %}
+{%- endfor %}
+
+{%- if add_generation_prompt %}
+    {{- '<|assistant_start|>' }}
+{%- endif %}
